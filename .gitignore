@@ -1,3 +1,6 @@
+# For mac (Naum)
+.DS_Store
+
 # History files
 .Rhistory
 .Rapp.history
