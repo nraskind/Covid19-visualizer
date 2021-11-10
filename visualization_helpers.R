@@ -1,5 +1,4 @@
 ### VISUALIZATION FUNCTIONS ###
-
 ###                       🍐  TODO   🍐               ###
 ###       create the underlying DF needed to rapidly  ###
 ###         query the data needed for these charts    ###
@@ -50,4 +49,3 @@ placey_bar_chart <- function(year_in=2021, month_in=1, place_in="Total - All Pla
   
   return(ploterino)
 }
-
