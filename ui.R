@@ -1,17 +1,34 @@
 ### UI ###
-library(shinythemes)
-library(markdown)
-
 ui <- navbarPage(title="", theme="simplex",
                   
                   tabPanel("Interactive Map",
                            fluidPage(
                             h1("Interactive Map will go here")
                            )
+                           # by total
+                           # by state
+                           # by county
+                           # I think that this tutorial does a nice job of explaining things:
+                           # https://www.youtube.com/watch?v=RrtqBYLf404&ab_channel=Dataslice
                   ),
                   tabPanel("Graphical View",
                            fluidPage(
-                            h1("Graphical View will go here")
+                             sidebarLayout(
+                               sidebarPanel(
+                                 selectInput(inputId="state_one", label="Stat One", choices = c("Race"="race","Sex"="sex","Age"="age"),
+                                            selected = "Race", multiple = F),
+                                 selectInput(inputId="stat_two", label="Stat Two", choices = c("Race"="race","Sex"="sex","Age"="age"),
+                                             selected = "Sex", multiple = F),
+                                 
+                                 radioButtons(inputId = "year",label = "Select Year", choices = c("2020"="2020","2021"="2021")),
+                                 sliderInput(inputId = "month", label = "Select Months", min = 1, max = 12, value = c(1, 12), step = 1),
+                               ),
+                               
+                               mainPanel(
+                                 # plotOutput(outputId = "plot_state_one")
+                                 # plotOutput(outputId = "plot_state_two")
+                               )
+                             )
                            )
                   ),
                   tabPanel("Data Sets",
@@ -22,9 +39,7 @@ ui <- navbarPage(title="", theme="simplex",
                                           "Race and Hispanic Origin" = "race_and_hispanic_origin",
                                           "Place of Death and Age" = "place_of_death_and_age",
                                           "Place of Death and State" = "place_of_death_and_state",
-                                          "Comorbities and Conditions" = "comorbities_and_conditions",
-                                          "Deaths by County" = "deaths_by_county",
-                                          "Deaths by Week and Urbanicity" = "deaths_by_week_and_urbanicity"
+                                          "Deaths by County" = "deaths_by_county"
                                          )),        
                              DT::dataTableOutput("display_table")
                            )
