@@ -1,4 +1,6 @@
 # FETCH DATA FROM CDC
+library(dplyr) # for filtration
+library(RCurl) # for fetching CSVs
 
 get_csv <- function(download_url) {
   # reads in a csv from an html-formatted download link
