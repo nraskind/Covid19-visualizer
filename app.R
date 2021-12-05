@@ -1,7 +1,7 @@
 rm(list=ls()) # clear all environmental variables 
 
 # temporary file for your boy, you can ignore this line when you run it
-setwd("~/Desktop/Covid19-visualizer/")
+setwd("~/Desktop/Projects/Covid19-visualizer/")
 
 # load required packages
 if (!require(DT)) install.packages("DT")
