@@ -5,17 +5,12 @@ ui <- navbarPage(title="", theme="simplex",
                            fluidPage(
                             h1("Interactive Map will go here")
                            )
-                           # by total
-                           # by state
-                           # by county
-                           # I think that this tutorial does a nice job of explaining things:
-                           # https://www.youtube.com/watch?v=RrtqBYLf404&ab_channel=Dataslice
                   ),
                   tabPanel("Graphical View",
                            fluidPage(
                              sidebarLayout(
                                sidebarPanel(
-                                 selectInput(inputId="state_one", label="Stat One", choices = c("Race"="race","Sex"="sex","Age"="age"),
+                                 selectInput(inputId="stat_one", label="Stat One", choices = c("Race"="race","Sex"="sex","Age"="age"),
                                             selected = "Race", multiple = F),
                                  selectInput(inputId="stat_two", label="Stat Two", choices = c("Race"="race","Sex"="sex","Age"="age"),
                                              selected = "Sex", multiple = F),
@@ -24,13 +19,13 @@ ui <- navbarPage(title="", theme="simplex",
                                  sliderInput(inputId = "month", label = "Select Months", min = 1, max = 12, value = c(1, 12), step = 1),
                                ),
                                
-                               mainPanel(
-                                 # plotOutput(outputId = "plot_state_one")
-                                 # plotOutput(outputId = "plot_state_two")
-                               )
+                               mainPanel(#plotOutput(outputId = "plot_stat_one"),
+                                         #plotlyOutput(outputId = "plot_stat_two")
+                                 )
                              )
                            )
                   ),
+                 ### Data Sets WILL NOT BE SUPPORTED IF WE ONLY HAVE THE COMBINED DATAFRAME ###
                   tabPanel("Data Sets",
                            fluidPage(
                              selectInput("data_set", "Choose a data set:",
