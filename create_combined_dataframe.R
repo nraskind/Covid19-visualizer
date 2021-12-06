@@ -1,12 +1,14 @@
 # FETCH DATA FROM CDC
 library(dplyr) # for filtration
 library(RCurl) # for fetching CSVs
-
 get_csv <- function(download_url) {
   # reads in a csv from an html-formatted download link
   readable_url <- RCurl::getURL(download_url)
   return(read.csv(text=readable_url))
 }
+
+
+### MAY NEED TO ADD NYC DATA TO NY DATA IN ORDER TO AVOID LOSS OF INFO ###
 
 create_combined_dataframe <- function() {
 sex_and_age <- get_csv("https://data.cdc.gov/api/views/9bhg-hcku/rows.csv?accessType=DOWNLOAD")
@@ -16,16 +18,23 @@ race_and_hispanic_origin <- get_csv("https://data.cdc.gov/api/views/pj7m-y5uh/ro
 # deaths_by_county <- get_csv("https://data.cdc.gov/api/views/kn79-hsxy/rows.csv?accessType=DOWNLOAD")
 # week_sex_and_age <- get_csv("https://data.cdc.gov/api/views/vsak-wrfu/rows.csv?accessType=DOWNLOAD")
 
+# state abbreviations for plotly
+state_abbreviations <- read.csv("data/state_abbreviations.csv") 
+
 ### metadata (date, state) ###
 sa_by_month <- filter(sex_and_age,
                       Group == "By Month",
                       Sex == "All Sexes",
-                      State != "Puerto Rico")
+                      !(State %in% c("Puerto Rico", "New York City", "United States")))
 
+codes <- data.frame(codes = state_abbreviations["Code"])
+rownames(codes) <- state_abbreviations["State"][1:51, 1]
 meta <- filter(sa_by_month,
                Age.Group == "All Ages") %>%
-  select(c("Year", "Month", "State"))
-
+  select(c("Year", "Month", "State")) %>%
+  mutate(month_num = 12 * (Year - 2020) + Month,
+         code = codes[State, 1],
+  )
 
 
 ### TOTALS ###
@@ -52,7 +61,8 @@ seniors <- filter(sa_by_month,
 ### RACE STATS ###
 race_by_month <- filter(race_and_hispanic_origin,
                         Group=="By Month",
-                        Indicator=="Unweighted distribution of population (%)")
+                        Indicator=="Unweighted distribution of population (%)",
+                        !(State %in% c("New York City", "United States")))
 
 white <- race_by_month["Non.Hispanic.White"]
 black <- race_by_month["Non.Hispanic.Black.or.African.American"]
@@ -73,6 +83,8 @@ combined_dataframe <- data.frame(
   "year"=meta["Year"],
   "month"=meta["Month"],
   "state"=meta["State"],
+  "month_num"=meta["month_num"],
+  "code"=meta["code"],
   "adolescents"=adolescents,
   "adults"=adults,
   "seniors"=seniors,
@@ -88,6 +100,8 @@ combined_dataframe <- data.frame(
 colnames(combined_dataframe) <- c("year",
                                   "month",
                                   "state",
+                                  "month_num",
+                                  "code",
                                   "adolescents",
                                   "adults",
                                   "seniors",
@@ -99,9 +113,25 @@ colnames(combined_dataframe) <- c("year",
                                   "asian",
                                   "other race")
 
+
 # replace NAs with 0s
 combined_dataframe[is.na(combined_dataframe)] <- 0
+
+
+combined_dataframe <- mutate(combined_dataframe, 
+                             hover=paste0("Total Number of Deaths: ", total_deaths,
+                                          "\nTotal Number of COVID19 Deaths: ", covid_deaths,
+                                          "\n\nWhite: ", white,
+                                          "\nBlack: ", black,
+                                          "\nHispanic: ", hispanic,
+                                          "\nAsian: ", asian,
+                                          "\nOther: ", `other`,
+                                          "\n\nAdolescents: ", adolescents,
+                                          "\nAdult (Ages 18-64): ", adults,
+                                          "\nSeniors (Ages 65+): ", seniors
+                             )
+                      )
+
 return(combined_dataframe)
 }
-
 combined_dataframe <- create_combined_dataframe()

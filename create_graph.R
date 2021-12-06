@@ -1,0 +1,41 @@
+# plotly map using combined dataframe
+library(plotly)
+library(dplyr)
+
+graph_properties <- list(
+  scope = 'usa',
+  showland = TRUE,
+  landcolor = toRGB("white"),
+  color = toRGB("white")
+)
+
+font = list(
+  family = "DM Sans",
+  size = 15,
+  color = "black"
+)
+
+label = list(
+  bgcolor = "#EEEEEE",
+  bordercolor = "transparent",
+  font = font
+)
+
+covid_graph <- plot_geo(test,
+                locationmode="USA-states",
+                frame = ~month_num
+                ) %>%
+  add_trace(locations = ~code,
+  z = ~covid_deaths, # z will be whatever they want to measure against
+  zmin = 0,
+  color = ~covid_deaths,
+  text = ~hover,
+  hoverinfo = 'text') %>%
+  layout(geo = graph_properties,
+         title="Pandemic Statistics in the US (By Month)"
+  ) %>%
+  config(displayModeBar = FALSE) %>%
+  style(hoverlabel = label)
+
+covid_graph
+
