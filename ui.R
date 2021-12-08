@@ -1,37 +1,50 @@
-### UI ###
+source("visualization_helpers.R")
+library(shiny)
+library(plotly)
+library(shinythemes)
+library(markdown)
+
 ui <- navbarPage(title="", theme="simplex",
-                  
                   tabPanel("Interactive Map",
                            fluidPage(
-                              sidebarLayout(
-                                sidebarPanel(
+                              fluidRow(
                                   selectInput(inputId="colorVar", label="Coloring Against: ",
                                               choices=c("Total Deaths"="total_deaths", "COVID19 Deaths"="covid_deaths",
                                                         "Male C19 deaths"="male", "Female C19 deaths"="female",
                                                         "Adolescent C19 Deaths"="adolescents", "Adult C19 Deaths"="adults",
                                                         "Senior C19 Deaths"="seniors"))
                                 ),
-                                mainPanel(
-                                  plotlyOutput("interactive_map")
+                              fluidRow(
+                                  plotly::plotlyOutput("interactive_map")
                                 )
                               )
-                           )
-                  ),
+                           ),
                   tabPanel("Graphical View",
                            fluidPage(
                              sidebarLayout(
                                sidebarPanel(
-                                 selectInput(inputId="stat_one", label="Stat One", choices = c("Race"="race","Sex"="male","Age"="adults"),
-                                            selected = "Race", multiple = F),
-                                 selectInput(inputId="stat_two", label="Stat Two", choices = c("Race"="race","Sex"="female","Age"="seniors"),
-                                             selected = "Sex", multiple = F),
+                                 selectInput(inputId="stat_one", label="Stat One", choices = c("Race"="race","Sex"="sex","Age"="age"),
+                                            selected = "Age", multiple = F),
+                                 selectInput(inputId="dep_var", label="Specific", choices = c("Adolescent"="adolescents",
+                                                                                                       "Adult"="adults",
+                                                                                                       "Senior"="seniors"),
+                                             selected = "Adult", multiple=F, width="50%"),
+                                 
+                                 selectInput(inputId="stat_two", label="Stat Two", choices = c("Race"="race","Sex"="sex","Age"="age"),
+                                             selected = "Age", multiple = F),
+                                 selectInput(inputId="dep_var_two", label="Specific", choices = c("Adolescent"="adolescents",
+                                                                                                  "Adult"="adults",
+                                                                                                  "Senior"="seniors"),
+                                             selected = "Adult", multiple=F, width="50%"),
                                  
                                  radioButtons(inputId = "year",label = "Select Year", choices = c("2020"="2020","2021"="2021")),
                                  sliderInput(inputId = "month", label = "Select Months", min = 1, max = 12, value = c(1, 12), step = 1),
+                                 selectInput(inputId="graph_type", label="Graph Type", choices = c("Bar"="bar", "Line"="line"),
+                                             selected = "Bar", multiple=F)
                                ),
                                
-                               mainPanel(plotlyOutput(outputId = "plot_stat_one"),
-                                         plotlyOutput(outputId = "plot_stat_two")
+                               mainPanel(plotly::plotlyOutput(outputId = "plot_stat_one"),
+                                         plotly::plotlyOutput(outputId = "plot_stat_two")
                                  )
                              )
                            )

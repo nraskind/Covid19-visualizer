@@ -1,9 +1,6 @@
 ######################################
 ######################################
-######################################
 ###      FETCH DATA FROM CDC       ###
-######################################
-######################################
 ######################################
 ###  RUN THIS SCRIPT ONCE A WEEK   ###
 ###  STORE ALL DATA AS CSVS THEN   ###
@@ -11,7 +8,7 @@
 ###        LAUNCHING THE APP       ### 
 ######################################
 ######################################
-######################################
+
 
 library(dplyr) # for filtration
 library(RCurl) # for fetching CSVs
@@ -24,10 +21,10 @@ get_csv <- function(download_url) {
 
 sex_and_age <- get_csv("https://data.cdc.gov/api/views/9bhg-hcku/rows.csv?accessType=DOWNLOAD")
 race_and_hispanic_origin <- get_csv("https://data.cdc.gov/api/views/pj7m-y5uh/rows.csv?accessType=DOWNLOAD")
-#place_of_death_and_age <- get_csv("https://data.cdc.gov/api/views/4va6-ph5s/rows.csv?accessType=DOWNLOAD")
-#place_of_death_and_state <- get_csv("https://data.cdc.gov/api/views/uggs-hy5q/rows.csv?accessType=DOWNLOAD")
-#deaths_by_county <- get_csv("https://data.cdc.gov/api/views/kn79-hsxy/rows.csv?accessType=DOWNLOAD")
-#week_sex_and_age <- get_csv("https://data.cdc.gov/api/views/vsak-wrfu/rows.csv?accessType=DOWNLOAD")
+place_of_death_and_age <- get_csv("https://data.cdc.gov/api/views/4va6-ph5s/rows.csv?accessType=DOWNLOAD")
+place_of_death_and_state <- get_csv("https://data.cdc.gov/api/views/uggs-hy5q/rows.csv?accessType=DOWNLOAD")
+deaths_by_county <- get_csv("https://data.cdc.gov/api/views/kn79-hsxy/rows.csv?accessType=DOWNLOAD")
+week_sex_and_age <- get_csv("https://data.cdc.gov/api/views/vsak-wrfu/rows.csv?accessType=DOWNLOAD")
 
 ### MAY NEED TO ADD NYC DATA TO NY DATA IN ORDER TO AVOID LOSS OF INFO ###
 create_combined_dataframe <- function() {
@@ -73,7 +70,7 @@ seniors <- filter(sa_by_month,
 ### RACE STATS ###
 race_by_month <- filter(race_and_hispanic_origin,
                         Group=="By Month",
-                        Indicator=="Unweighted distribution of population (%)",
+                        Indicator=="Weighted distribution of population (%)",
                         !(State %in% c("New York City", "United States")))
 
 white <- race_by_month["Non.Hispanic.White"]
@@ -87,6 +84,24 @@ other <- rowSums(
                             "Non.Hispanic.Native.Hawaiian.or.Other.Pacific.Islander"),
                         ),
                  na.rm=TRUE)
+
+race_by_month <- filter(race_and_hispanic_origin,
+                        Group=="By Month",
+                        Indicator=="Count of COVID-19 deaths",
+                        !(State %in% c("New York City", "United States")))
+
+# current code duplication, will clean up 100%
+white_deaths <- race_by_month["Non.Hispanic.White"]
+black_deaths <- race_by_month["Non.Hispanic.Black.or.African.American"]
+hispanic_deaths <- race_by_month["Hispanic.or.Latino"]
+asian_deaths <- race_by_month["Non.Hispanic.Asian"]
+other_deaths <- rowSums(
+  select(race_by_month, 
+         c("Non.Hispanic.American.Indian.or.Alaska.Native",
+           "Non.Hispanic.more.than.one.race",
+           "Non.Hispanic.Native.Hawaiian.or.Other.Pacific.Islander"),
+  ),
+  na.rm=TRUE)
 
 ### SEX STATS ###
 male <- filter(sex_and_age,
@@ -117,7 +132,12 @@ combined_dataframe <- data.frame(
   "black" = black,
   "hispanic" = hispanic,
   "asian" = asian,
-  "other race" = other
+  "other race" = other,
+  "white_deaths" = white_deaths,
+  "black_deaths" = black_deaths,
+  "hispanic_deaths" = hispanic_deaths,
+  "asian_deaths" = asian_deaths,
+  "other_deaths" = other_deaths
 )
 
 colnames(combined_dataframe) <- c("year",
@@ -136,7 +156,12 @@ colnames(combined_dataframe) <- c("year",
                                   "black",
                                   "hispanic",
                                   "asian",
-                                  "other race")
+                                  "other race",
+                                  "white_deaths",
+                                  "black_deaths",
+                                  "hispanic_deaths",
+                                  "asian_deaths",
+                                  "other_deaths")
 
 # replace NAs with 0s
 combined_dataframe[is.na(combined_dataframe)] <- 0
