@@ -1,8 +1,7 @@
-source("visualization_helpers.R")
 library(shiny)
-library(plotly)
 library(shinythemes)
 library(markdown)
+library(plotly)
 
 ui <- navbarPage(title="", theme="simplex",
                   tabPanel("Interactive Map",
