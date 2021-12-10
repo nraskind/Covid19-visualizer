@@ -10,11 +10,14 @@
 ######################################
 
 
+# Just syntax to think about, may be faster and cleaner
+# combined_dataframe[c("white", "black")]
+
 library(dplyr) # for filtration
 library(RCurl) # for fetching CSVs
 
+# reads in a csv from an html-formatted download link
 get_csv <- function(download_url) {
-  # reads in a csv from an html-formatted download link
   readable_url <- RCurl::getURL(download_url)
   return(read.csv(text=readable_url))
 }
@@ -37,6 +40,7 @@ sa_by_month <- filter(sex_and_age,
                       Sex == "All Sexes",
                       !(State %in% c("Puerto Rico", "New York City", "United States")))
 
+# added state codes so that we could use plotly geo_map with our data
 codes <- data.frame(codes = state_abbreviations["Code"])
 rownames(codes) <- state_abbreviations["State"][1:51, 1]
 meta <- filter(sa_by_month,
@@ -183,3 +187,13 @@ combined_dataframe <- mutate(combined_dataframe,
 return(combined_dataframe)
 }
 combined_dataframe <- create_combined_dataframe()
+
+### WRITE CSVS TO DATA PAGE ###
+write.csv(combined_dataframe, "data/combined_dataframe.csv", row.names=FALSE)
+write.csv(sex_and_age, "data/sex_and_age.csv", row.names=FALSE)
+write.csv(race_and_hispanic_origin, "data/race_and_hispanic_origin.csv", row.names=FALSE)
+write.csv(place_of_death_and_age, "data/place_of_death_and_age.csv", row.names=FALSE)
+write.csv(place_of_death_and_state, "data/place_of_death_and_state.csv", row.names=FALSE)
+write.csv(deaths_by_county, "data/deaths_by_county.csv", row.names=FALSE)
+write.csv(week_sex_and_age, "data/week_sex_and_age.csv", row.names=FALSE)
+### WRITE CSVS TO DATA PAGE ###
