@@ -1,8 +1,14 @@
 library(plotly)
-###                🍐 VISUALIZATION FUNCTIONS  🍐        ###
 
-## will replace with just loading CSVs ##
-source("create_combined_dataframe.R") 
+combined_dataframe <- read.csv("data/combined_dataframe.csv")
+sex_and_age <- read.csv("data/sex_and_age.csv")
+race_and_hispanic_origin <- read.csv("data/race_and_hispanic_origin.csv")
+place_of_death_and_age <- read.csv("data/place_of_death_and_age.csv")
+place_of_death_and_state <- read.csv("data/place_of_death_and_state.csv")
+deaths_by_county <- read.csv("data/deaths_by_county.csv")
+week_sex_and_age <- read.csv("data/week_sex_and_age.csv")
+
+###                🍐 VISUALIZATION FUNCTIONS  🍐        ###
 
 ###                     ###
 ###   INTERACTIVE MAP   ###
@@ -47,10 +53,6 @@ create_covid_graph <- function(color_against="covid_deaths") {
 ###                     ###
 ###   INTERACTIVE MAP   ###
 ###                     ###
-
-
-
-
 
 
 
