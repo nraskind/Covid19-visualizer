@@ -48,7 +48,6 @@ ui <- navbarPage(title="", theme="simplex",
                              )
                            )
                   ),
-                 ### Data Sets WILL NOT BE SUPPORTED IF WE ONLY HAVE THE COMBINED DATAFRAME ###
                   tabPanel("Data Sets",
                            fluidPage(
                              selectInput("data_set", "Choose a data set:",
@@ -65,8 +64,7 @@ ui <- navbarPage(title="", theme="simplex",
                   ),
                   tabPanel("About",
                            fluidPage(
-                            # currently only works if the working directory is Covid19-visualizer (i.e. help_messages/..)
                             shiny::includeMarkdown("help_messages/about_page.md")
                            )
                   )
-                ) # end navbarPage
+                )
