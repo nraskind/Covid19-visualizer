@@ -1,7 +1,8 @@
 library(DT)
 
-### SERVER ###
+source("visualization_helpers.R") # includes plotly library
 
+### SERVER ###
 
 server = function(input, output, session) {
   # displaying selected data set, implemented inline beacuse it's so simple
