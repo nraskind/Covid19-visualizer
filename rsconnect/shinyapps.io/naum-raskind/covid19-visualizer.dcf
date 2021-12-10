@@ -1,0 +1,11 @@
+name: covid19-visualizer
+title:
+username:
+account: naum-raskind
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5292400
+bundleId: 5352567
+url: https://naum-raskind.shinyapps.io/covid19-visualizer/
+when: 1639088710.59245
+lastSyncTime: 1639088710.59248
