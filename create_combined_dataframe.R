@@ -5,13 +5,9 @@
 ###  RUN THIS SCRIPT ONCE A WEEK   ###
 ###  STORE ALL DATA AS CSVS THEN   ###
 ###  YOU CAN SIMPLY LOAD THEM WHEN ###
-###        LAUNCHING THE APP       ### 
+###        LAUNCHING THE APP       ###
 ######################################
 ######################################
-
-
-# Just syntax to think about, may be faster and cleaner
-# combined_dataframe[c("white", "black")]
 
 library(dplyr) # for filtration
 library(RCurl) # for fetching CSVs
@@ -19,7 +15,7 @@ library(RCurl) # for fetching CSVs
 # reads in a csv from an html-formatted download link
 get_csv <- function(download_url) {
   readable_url <- RCurl::getURL(download_url)
-  return(read.csv(text=readable_url))
+  return(read.csv(text = readable_url))
 }
 
 sex_and_age <- get_csv("https://data.cdc.gov/api/views/9bhg-hcku/rows.csv?accessType=DOWNLOAD")
@@ -31,169 +27,116 @@ week_sex_and_age <- get_csv("https://data.cdc.gov/api/views/vsak-wrfu/rows.csv?a
 
 ### MAY NEED TO ADD NYC DATA TO NY DATA IN ORDER TO AVOID LOSS OF INFO ###
 create_combined_dataframe <- function() {
-# state abbreviations for plotly
-state_abbreviations <- read.csv("data/state_abbreviations.csv") 
-
-### metadata (date, state) ###
-sa_by_month <- filter(sex_and_age,
-                      Group == "By Month",
-                      Sex == "All Sexes",
-                      !(State %in% c("Puerto Rico", "New York City", "United States")))
-
-# added state codes so that we could use plotly geo_map with our data
-codes <- data.frame(codes = state_abbreviations["Code"])
-rownames(codes) <- state_abbreviations["State"][1:51, 1]
-meta <- filter(sa_by_month,
-               Age.Group == "All Ages") %>%
-  select(c("Year", "Month", "State")) %>%
-  mutate(month_num = 12 * (Year - 2020) + Month,
-         code = codes[State, 1],
+  # state abbreviations for plotly
+  state_abbreviations <- read.csv("data/state_abbreviations.csv", row.names = 1)
+  
+  ### metadata (date, state) ###
+  sa_by_month <- filter(sex_and_age,
+                        Group == "By Month",
+                        Sex == "All Sexes",!(State %in% c(
+                          "Puerto Rico", "New York City", "United States"
+                        )))
+  
+  # added state codes so that we could use plotly geo_map with our data
+  meta <- filter(sa_by_month, Age.Group == "All Ages") %>%
+    select(c(
+      year = "Year",
+      month = "Month",
+      state = "State"
+    )) %>%
+    mutate(month_num = 12 * (year - 2020) + month,
+           code = state_abbreviations[state, 1])
+  
+  ### TOTALS ###
+  total_and_covid_deaths <- filter(sa_by_month, Age.Group == "All Ages") %>%
+    select(c(total_deaths = "Total.Deaths", covid_deaths = "COVID.19.Deaths"))
+  
+  ### AGE STATS ###
+  age <- data.frame(adolescents = sa_by_month[sa_by_month$Age.Group == "0-17 years", "COVID.19.Deaths"],
+    adults = sa_by_month[sa_by_month$Age.Group %in% c("18-29 years",
+                                                      "30-39 years",
+                                                      "40-49 years",
+                                                      "50-64 years"), "COVID.19.Deaths"] %>%
+      matrix(nrow = 4) %>% colSums,
+    seniors = sa_by_month[sa_by_month$Age.Group %in% c("65-74 years",
+                                                       "75-84 years",
+                                                       "85 years and over"), "COVID.19.Deaths"] %>%
+      matrix(nrow = 3) %>% colSums
   )
-
-
-### TOTALS ###
-total_deaths <- filter(sa_by_month, Age.Group=="All Ages")["Total.Deaths"]
-covid_deaths <- filter(sa_by_month, Age.Group=="All Ages")["COVID.19.Deaths"]
-
-### AGE STATS ###
-adolescents <- filter(sa_by_month, Age.Group == "0-17 years")["COVID.19.Deaths"]
-
-adults <- filter(sa_by_month,
-                 Age.Group %in% c("18-29 years",
-                                  "30-39 years",
-                                  "40-49 years",
-                                  "50-64 years"))["COVID.19.Deaths"] %>%
-  rowsum(rep (1:(nrow(.) / 4), each = 4))
-
-seniors <- filter(sa_by_month,
-                  Age.Group %in% c("65-74 years",
-                                   "75-84 years",
-                                   "85 years and over"))["COVID.19.Deaths"] %>%
-  rowsum(rep(1:(nrow(.) / 3), each = 3))
-
-### RACE STATS ###
-race_by_month <- filter(race_and_hispanic_origin,
-                        Group=="By Month",
-                        Indicator=="Weighted distribution of population (%)",
-                        !(State %in% c("New York City", "United States")))
-
-white <- race_by_month["Non.Hispanic.White"]
-black <- race_by_month["Non.Hispanic.Black.or.African.American"]
-hispanic <- race_by_month["Hispanic.or.Latino"]
-asian <- race_by_month["Non.Hispanic.Asian"]
-other <- rowSums(
-                  select(race_by_month, 
-                          c("Non.Hispanic.American.Indian.or.Alaska.Native",
-                            "Non.Hispanic.more.than.one.race",
-                            "Non.Hispanic.Native.Hawaiian.or.Other.Pacific.Islander"),
-                        ),
-                 na.rm=TRUE)
-
-race_by_month <- filter(race_and_hispanic_origin,
-                        Group=="By Month",
-                        Indicator=="Count of COVID-19 deaths",
-                        !(State %in% c("New York City", "United States")))
-
-# current code duplication, will clean up 100%
-white_deaths <- race_by_month["Non.Hispanic.White"]
-black_deaths <- race_by_month["Non.Hispanic.Black.or.African.American"]
-hispanic_deaths <- race_by_month["Hispanic.or.Latino"]
-asian_deaths <- race_by_month["Non.Hispanic.Asian"]
-other_deaths <- rowSums(
-  select(race_by_month, 
-         c("Non.Hispanic.American.Indian.or.Alaska.Native",
-           "Non.Hispanic.more.than.one.race",
-           "Non.Hispanic.Native.Hawaiian.or.Other.Pacific.Islander"),
-  ),
-  na.rm=TRUE)
-
-### SEX STATS ###
-male <- filter(sex_and_age,
-               Group=="By Month",
-               Age.Group=="All Ages",
-               Sex=="Male",
-               !(State %in% c("Puerto Rico", "New York City", "United States")))["COVID.19.Deaths"]
-female <- filter(sex_and_age,
-               Group=="By Month",
-               Age.Group=="All Ages",
-               Sex=="Female",
-               !(State %in% c("Puerto Rico", "New York City", "United States")))["COVID.19.Deaths"]
-
-combined_dataframe <- data.frame(
-  "year" = meta["Year"],
-  "month" = meta["Month"],
-  "state" = meta["State"],
-  "month_num" = meta["month_num"],
-  "code" = meta["code"],
-  "male"=male,
-  "female"=female,
-  "adolescents" = adolescents,
-  "adults" = adults,
-  "seniors" = seniors,
-  "total_deaths" = total_deaths,
-  "covid_deaths" = covid_deaths,
-  "white" = white,
-  "black" = black,
-  "hispanic" = hispanic,
-  "asian" = asian,
-  "other race" = other,
-  "white_deaths" = white_deaths,
-  "black_deaths" = black_deaths,
-  "hispanic_deaths" = hispanic_deaths,
-  "asian_deaths" = asian_deaths,
-  "other_deaths" = other_deaths
-)
-
-colnames(combined_dataframe) <- c("year",
-                                  "month",
-                                  "state",
-                                  "month_num",
-                                  "code",
-                                  "male",
-                                  "female",
-                                  "adolescents",
-                                  "adults",
-                                  "seniors",
-                                  "total_deaths",
-                                  "covid_deaths",
-                                  "white",
-                                  "black",
-                                  "hispanic",
-                                  "asian",
-                                  "other race",
-                                  "white_deaths",
-                                  "black_deaths",
-                                  "hispanic_deaths",
-                                  "asian_deaths",
-                                  "other_deaths")
-
-# replace NAs with 0s
-combined_dataframe[is.na(combined_dataframe)] <- 0
-
-combined_dataframe <- mutate(combined_dataframe, 
-                             hover=paste0("Total Number of Deaths: ", total_deaths,
-                                          "\nTotal Number of COVID19 Deaths: ", covid_deaths,
-                                          "\n\nWhite: ", white,
-                                          "\nBlack: ", black,
-                                          "\nHispanic: ", hispanic,
-                                          "\nAsian: ", asian,
-                                          "\nOther: ", `other`,
-                                          "\n\nAdolescents: ", adolescents,
-                                          "\nAdult (Ages 18-64): ", adults,
-                                          "\nSeniors (Ages 65+): ", seniors
-                             )
-                      )
-
-return(combined_dataframe)
+  
+  ### RACE STATS ###
+  race <- filter(race_and_hispanic_origin,
+                 Group == "By Month", !(State %in% c("New York City", "United States"))) %>%
+    mutate(
+        other = Non.Hispanic.American.Indian.or.Alaska.Native +
+        Non.Hispanic.more.than.one.race +
+        Non.Hispanic.Native.Hawaiian.or.Other.Pacific.Islander
+    ) %>% select(
+      c("Indicator",
+        white = "Non.Hispanic.White",
+        black = "Non.Hispanic.Black.or.African.American",
+        hispanic = "Hispanic.or.Latino",
+        asian = "Non.Hispanic.Asian",
+        "other")
+    )
+  
+  race_death_weights <- filter(race, Indicator == "Weighted distribution of population (%)")[,-1]
+  race_death_counts <- filter(race, Indicator == "Count of COVID-19 deaths") %>%
+    select(
+      c(white_deaths = "white",
+        black_deaths = "black",
+        hispanic_deaths = "hispanic",
+        asian_deaths = "asian",
+        other_deaths = "other"
+      )
+    )
+  ### SEX STATS ###
+  sex <- filter(sex_and_age,
+                Group == "By Month",
+                Age.Group == "All Ages",
+                !(State %in% c(
+                  "Puerto Rico", "New York City", "United States"
+                ))) %>% select(c("Sex", "COVID.19.Deaths"))
+  
+  combined_dataframe <- data.frame(
+    meta,
+    male = sex[sex$Sex == "Male", "COVID.19.Deaths"],
+    female = sex[sex$Sex == "Female", "COVID.19.Deaths"],
+    age,
+    total_and_covid_deaths,
+    race_death_weights,
+    race_death_counts
+  ) %>% mutate(
+    hover = paste0("Total Number of Deaths: ", total_deaths,
+      "\nTotal Number of COVID19 Deaths: ", covid_deaths,
+      "\n\nWhite: ", white,
+      "\nBlack: ", black,
+      "\nHispanic: ", hispanic,
+      "\nAsian: ", asian,
+      "\nOther: ", other,
+      "\n\nAdolescents: ", adolescents,
+      "\nAdult (Ages 18-64): ", adults,
+      "\nSeniors (Ages 65+): ", seniors)
+  )
+  
+  # replace NAs with 0s
+  combined_dataframe[is.na(combined_dataframe)] <- 0
+  
+  return(combined_dataframe)
 }
+
 combined_dataframe <- create_combined_dataframe()
 
 ### WRITE CSVS TO DATA PAGE ###
-write.csv(combined_dataframe, "data/combined_dataframe.csv", row.names=FALSE)
-write.csv(sex_and_age, "data/sex_and_age.csv", row.names=FALSE)
-write.csv(race_and_hispanic_origin, "data/race_and_hispanic_origin.csv", row.names=FALSE)
-write.csv(place_of_death_and_age, "data/place_of_death_and_age.csv", row.names=FALSE)
-write.csv(place_of_death_and_state, "data/place_of_death_and_state.csv", row.names=FALSE)
-write.csv(deaths_by_county, "data/deaths_by_county.csv", row.names=FALSE)
-write.csv(week_sex_and_age, "data/week_sex_and_age.csv", row.names=FALSE)
+upload_csv <- function(dataframe) {
+  write.csv(get(dataframe), paste0("data/", dataframe, ".csv"), row.names=FALSE)
+}
+
+upload_csv("combined_dataframe")
+upload_csv("sex_and_age")
+upload_csv("race_and_hispanic_origin")
+upload_csv("place_of_death_and_age")
+upload_csv("place_of_death_and_state")
+upload_csv("deaths_by_county")
+upload_csv("week_sex_and_age")
 ### WRITE CSVS TO DATA PAGE ###
