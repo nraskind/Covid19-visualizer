@@ -28,8 +28,8 @@ week_sex_and_age <- get_csv("https://data.cdc.gov/api/views/vsak-wrfu/rows.csv?a
 ### MAY NEED TO ADD NYC DATA TO NY DATA IN ORDER TO AVOID LOSS OF INFO ###
 create_combined_dataframe <- function() {
   # state abbreviations for plotly
-  state_abbreviations <- read.csv("data/state_abbreviations.csv", row.names = 1)
-  
+  state_abbreviations <- read.csv("data/state_abbreviations.csv", row.names = 2)
+
   ### metadata (date, state) ###
   sa_by_month <- filter(sex_and_age,
                         Group == "By Month",
@@ -46,7 +46,7 @@ create_combined_dataframe <- function() {
     )) %>%
     mutate(month_num = 12 * (year - 2020) + month,
            code = state_abbreviations[state, 1])
-  
+
   ### TOTALS ###
   total_and_covid_deaths <- filter(sa_by_month, Age.Group == "All Ages") %>%
     select(c(total_deaths = "Total.Deaths", covid_deaths = "COVID.19.Deaths"))
